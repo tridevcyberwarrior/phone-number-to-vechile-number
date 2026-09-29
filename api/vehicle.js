@@ -1,4 +1,6 @@
-import CryptoJS from 'crypto-js';
+
+// Built-in crypto module (Node.js native)
+import crypto from 'crypto';
 
 const DEFAULT_CONFIG = {
   baseUrl: 'https://delhigw.napix.gov.in/nic/parivahan',
@@ -7,34 +9,21 @@ const DEFAULT_CONFIG = {
   clientSecret: 'de83eeeb148878ae375f28756492e8a0'
 };
 
-// CORS wrapper
-const cors = (handler) => async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  return handler(req, res);
-};
-
-function aesEncrypt(value, key) {
-  const keyBytes = CryptoJS.enc.Utf8.parse(key);
-  const encrypted = CryptoJS.AES.encrypt(value, keyBytes, {
-    mode: CryptoJS.mode.ECB,
-    padding: CryptoJS.pad.Pkcs7
-  });
-  return encrypted.toString();
+// AES Encryption using Node.js crypto
+function aesEncrypt(text, key) {
+  const keyBuffer = Buffer.from(key, 'utf8');
+  const cipher = crypto.createCipheriv('aes-128-ecb', keyBuffer, null);
+  let encrypted = cipher.update(text, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return encrypted;
 }
 
-function aesDecrypt(encryptedValue, key) {
-  const keyBytes = CryptoJS.enc.Utf8.parse(key);
-  const decrypted = CryptoJS.AES.decrypt(encryptedValue, keyBytes, {
-    mode: CryptoJS.mode.ECB,
-    padding: CryptoJS.pad.Pkcs7
-  });
-  return decrypted.toString(CryptoJS.enc.Utf8);
+function aesDecrypt(encryptedText, key) {
+  const keyBuffer = Buffer.from(key, 'utf8');
+  const decipher = crypto.createDecipheriv('aes-128-ecb', keyBuffer, null);
+  let decrypted = decipher.update(encryptedText, 'base64', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
 }
 
 function generateRequestKey(timestamp) {
@@ -43,7 +32,16 @@ function generateRequestKey(timestamp) {
          "!~)#@*&^";
 }
 
-async function handler(req, res) {
+export default async function handler(req, res) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -76,7 +74,7 @@ async function handler(req, res) {
     const tokenData = await tokenRes.json();
     
     if (!tokenData.access_token) {
-      return res.status(401).json({ error: 'Authentication failed' });
+      return res.status(401).json({ error: 'Authentication failed', details: tokenData });
     }
 
     // Step 2: Encrypted POST to get vehicles
@@ -116,8 +114,12 @@ async function handler(req, res) {
       } else {
         result = outer;
       }
-    } catch {
-      result = { raw: rawText };
+    } catch (e) {
+      return res.status(500).json({ 
+        error: 'Parse error', 
+        raw: rawText.substring(0, 500),
+        parseError: e.message 
+      });
     }
 
     // Process result
@@ -145,8 +147,6 @@ async function handler(req, res) {
     });
 
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message, stack: error.stack });
   }
 }
-
-export default cors(handler);
