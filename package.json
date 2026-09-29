@@ -1,0 +1,8 @@
+{
+  "name": "vehicle-lookup",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  }
+}
