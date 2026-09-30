@@ -166,4 +166,174 @@
             document.getElementById('results').style.display = 'none';
 
             if (!validateMobile(mobile)) {
-                showError('Please
+                showError('Please enter a valid 10-digit mobile number');
+                mobileInput.focus();
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                // Step 1: Get Token
+                const tokenUrl = CORS_PROXY + encodeURIComponent('https://delhigw.napix.gov.in/nic/parivahan/oauth2/token');
+                const tokenRes = await fetch(tokenUrl, {
+                    method: 'POST',
+                    headers: {
+                        'User-Agent': 'okhttp/4.9.2',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams({
+                        grant_type: 'client_credentials',
+                        scope: 'napix',
+                        client_id: 'b91c303443f61b37106750823881cd2f',
+                        client_secret: 'de83eeeb148878ae375f28756492e8a0'
+                    })
+                });
+
+                if (!tokenRes.ok) {
+                    const errText = await tokenRes.text();
+                    throw new Error(`Token failed: ${tokenRes.status} - ${errText.substring(0, 100)}`);
+                }
+
+                const tokenData = await tokenRes.json();
+                
+                if (!tokenData.access_token) {
+                    throw new Error('Authentication failed: ' + JSON.stringify(tokenData));
+                }
+
+                // Step 2: Get Vehicle Data
+                const timestamp = String(Date.now());
+                const key = generateRequestKey(timestamp);
+                const plainText = JSON.stringify({ mobileNo: mobile });
+                const encryptedData = aesEncrypt(plainText, key);
+                
+                const vehicleUrl = CORS_PROXY + encodeURIComponent(
+                    'https://delhigw.napix.gov.in/nic/parivahan/mparivahan/wrapperapi/vahan/vahancapi/common/getvehiclevalidity'
+                );
+
+                const vehicleRes = await fetch(vehicleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'User-Agent': 'okhttp/4.9.2',
+                        'Accept': 'application/json',
+                        'timestamp': timestamp,
+                        'Authorization': `Bearer ${tokenData.access_token}`,
+                        'Param2': '2.0.142',
+                        'Param1': 'abcd',
+                        'Content-Type': 'application/json; charset=utf-8'
+                    },
+                    body: JSON.stringify({ data: btoa(encryptedData) })
+                });
+
+                if (!vehicleRes.ok) {
+                    const errText = await vehicleRes.text();
+                    throw new Error(`Vehicle API failed: ${vehicleRes.status} - ${errText.substring(0, 100)}`);
+                }
+
+                const rawText = await vehicleRes.text();
+                let result;
+
+                try {
+                    const outer = JSON.parse(rawText);
+                    if (outer.data) {
+                        const encryptedText = atob(outer.data);
+                        const decrypted = aesDecrypt(encryptedText, key);
+                        result = JSON.parse(decrypted);
+                    } else {
+                        result = outer;
+                    }
+                } catch (e) {
+                    throw new Error('Failed to parse response: ' + e.message);
+                }
+
+                // Process vehicles
+                const apiMessage = result?.apiMessage || {};
+                let vehicles = [];
+
+                if (Array.isArray(result.data)) {
+                    vehicles = result.data.filter(v => typeof v === 'object');
+                } else if (typeof result.data === 'object' && result.data !== null) {
+                    vehicles = [result.data];
+                }
+
+                if (vehicles.length === 0) {
+                    const msg = result?.error || 
+                                apiMessage.developerMessage || 
+                                apiMessage.message || 
+                                'No vehicle registered against this mobile number.';
+                    showError(msg);
+                    return;
+                }
+
+                // Render results
+                const container = document.getElementById('vehiclesList');
+                container.innerHTML = '';
+                
+                const keyMap = {
+                    'regNo': 'Registration No',
+                    'stateCd': 'State Code',
+                    'stateName': 'State',
+                    'officeName': 'RTO Office',
+                    'offCd': 'Office Code',
+                    'regnUpto': 'Registration Upto',
+                    'fitUpto': 'Fitness Upto',
+                    'taxUpto': 'Tax Upto',
+                    'insUpto': 'Insurance Upto',
+                    'puccUpto': 'PUCC Upto',
+                    'permitUpto': 'Permit Upto'
+                };
+
+                const displayOrder = [
+                    'Registration No', 'State', 'State Code', 'RTO Office',
+                    'Office Code', 'Registration Upto', 'Fitness Upto',
+                    'Tax Upto', 'Insurance Upto', 'PUCC Upto', 'Permit Upto'
+                ];
+
+                vehicles.forEach((v, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'vehicle-card';
+                    
+                    const formatted = {};
+                    for (const [k, label] of Object.entries(keyMap)) {
+                        if (v[k]) formatted[label] = v[k];
+                    }
+
+                    let detailsHtml = '';
+                    displayOrder.forEach(label => {
+                        if (formatted[label]) {
+                            detailsHtml += `
+                                <div class="detail-row">
+                                    <span class="detail-label">${label}</span>
+                                    <span class="detail-value">${formatted[label]}</span>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    card.innerHTML = `
+                        <div class="vehicle-header">
+                            <span class="vehicle-number">Vehicle #${index + 1}</span>
+                        </div>
+                        <div class="vehicle-details">${detailsHtml}</div>
+                    `;
+                    container.appendChild(card);
+                });
+
+                document.getElementById('vehicleCount').textContent = `${vehicles.length} vehicle${vehicles.length > 1 ? 's' : ''}`;
+                document.getElementById('results').style.display = 'block';
+                showSuccess(`Found ${vehicles.length} vehicle(s) linked to ${mobile}`);
+
+            } catch (error) {
+                console.error('Full error:', error);
+                showError(error.message || 'Network error. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        document.getElementById('mobile').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchVehicle();
+        });
+    </script>
+</body>
+</html>
