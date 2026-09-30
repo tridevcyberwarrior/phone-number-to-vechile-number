@@ -7,160 +7,39 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            background: #f3f4f6; 
-            padding: 20px;
-            min-height: 100vh;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f3f4f6; padding: 20px; min-height: 100vh; }
         .container { max-width: 600px; margin: 0 auto; }
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         .icon { font-size: 48px; margin-bottom: 10px; }
         h1 { font-size: 24px; font-weight: 600; margin-bottom: 5px; color: #111827; }
         .subtitle { color: #6b7280; font-size: 14px; }
-        
-        .card { 
-            background: white; 
-            border-radius: 12px; 
-            padding: 24px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .input-group { margin-bottom: 16px; }
-        label { 
-            display: block; 
-            font-size: 14px; 
-            font-weight: 500; 
-            margin-bottom: 6px; 
-            color: #374151;
-        }
-        input { 
-            width: 100%; 
-            padding: 12px 16px; 
-            border: 1px solid #d1d5db; 
-            border-radius: 8px; 
-            font-size: 16px;
-            transition: border-color 0.2s;
-        }
-        input:focus { 
-            outline: none; 
-            border-color: #3b82f6; 
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-        .hint { 
-            display: block; 
-            color: #9ca3af; 
-            font-size: 12px; 
-            margin-top: 4px; 
-        }
-        
-        button { 
-            width: 100%; 
-            padding: 14px 24px; 
-            background: #3b82f6; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 16px; 
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
+        label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #374151; }
+        input { width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px; }
+        input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .hint { display: block; color: #9ca3af; font-size: 12px; margin-top: 4px; }
+        button { width: 100%; padding: 14px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
         button:hover:not(:disabled) { background: #2563eb; }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
-        
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .alert-error {
-            background: #fee2e2;
-            border: 1px solid #ef4444;
-            color: #dc2626;
-        }
-        .alert-success {
-            background: #d1fae5;
-            border: 1px solid #22c55e;
-            color: #16a34a;
-        }
-        
-        .results-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+        .alert-error { background: #fee2e2; border: 1px solid #ef4444; color: #dc2626; }
+        .alert-success { background: #d1fae5; border: 1px solid #22c55e; color: #16a34a; }
+        .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .results-header h2 { font-size: 18px; font-weight: 600; color: #111827; }
-        .badge {
-            background: #3b82f6;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .vehicle-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-        .vehicle-header {
-            background: #f3f4f6;
-            padding: 12px 16px;
-            border-bottom: 1px solid #e5e7eb;
-        }
+        .badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .vehicle-card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+        .vehicle-header { background: #f3f4f6; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
         .vehicle-number { font-size: 14px; font-weight: 600; color: #374151; }
         .vehicle-details { padding: 16px; }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
+        .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
         .detail-row:last-child { border-bottom: none; }
         .detail-label { color: #6b7280; font-size: 13px; }
-        .detail-value { 
-            font-size: 13px; 
-            font-weight: 500; 
-            color: #111827;
-            text-align: right;
-            max-width: 60%;
-            word-break: break-word;
-        }
-        
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
+        .detail-value { font-size: 13px; font-weight: 500; color: #111827; text-align: right; max-width: 60%; word-break: break-word; }
+        footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
         footer p { color: #9ca3af; font-size: 12px; }
-        
-        @media (max-width: 480px) {
-            body { padding: 16px; }
-            .card { padding: 20px; }
-            h1 { font-size: 20px; }
-        }
     </style>
 </head>
 <body>
@@ -174,13 +53,7 @@
         <div class="card">
             <div class="input-group">
                 <label for="mobile">Mobile Number</label>
-                <input 
-                    type="tel" 
-                    id="mobile" 
-                    placeholder="Enter 10-digit mobile number" 
-                    maxlength="10"
-                    autocomplete="off"
-                />
+                <input type="tel" id="mobile" placeholder="Enter 10-digit mobile number" maxlength="10" autocomplete="off"/>
                 <span class="hint">Example: 9876543210</span>
             </div>
 
@@ -211,8 +84,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     
     <script>
-        // CORS Proxy for API calls
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+        // ✅ NEW CORS Proxy
+        const CORS_PROXY = 'https://corsproxy.io/?';
 
         function aesEncrypt(value, key) {
             const keyBytes = CryptoJS.enc.Utf8.parse(key);
@@ -308,10 +181,15 @@
                     })
                 });
 
+                if (!tokenRes.ok) {
+                    const errText = await tokenRes.text();
+                    throw new Error(`Token failed: ${tokenRes.status} - ${errText.substring(0, 100)}`);
+                }
+
                 const tokenData = await tokenRes.json();
                 
                 if (!tokenData.access_token) {
-                    throw new Error('Authentication failed');
+                    throw new Error('Authentication failed: ' + JSON.stringify(tokenData));
                 }
 
                 // Step 2: Get Vehicle Data
@@ -338,6 +216,11 @@
                     body: JSON.stringify({ data: btoa(encryptedData) })
                 });
 
+                if (!vehicleRes.ok) {
+                    const errText = await vehicleRes.text();
+                    throw new Error(`Vehicle API failed: ${vehicleRes.status} - ${errText.substring(0, 100)}`);
+                }
+
                 const rawText = await vehicleRes.text();
                 let result;
 
@@ -351,7 +234,7 @@
                         result = outer;
                     }
                 } catch (e) {
-                    throw new Error('Failed to parse response');
+                    throw new Error('Failed to parse response: ' + e.message);
                 }
 
                 // Process vehicles
@@ -432,6 +315,7 @@
                 showSuccess(`Found ${vehicles.length} vehicle(s) linked to ${mobile}`);
 
             } catch (error) {
+                console.error('Full error:', error);
                 showError(error.message || 'Network error. Please try again.');
             } finally {
                 setLoading(false);
